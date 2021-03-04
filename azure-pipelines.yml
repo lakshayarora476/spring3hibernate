@@ -23,8 +23,7 @@ steps:
   displayName: 'Maven pom.xml'
   inputs:
     mavenPomFile: pom.xml
-    goals: package install deploy
-    codeCoverageToolOption: Cobertura
+    goals: 'package install deploy'
 
 
 - task: CopyFiles@2
