@@ -1,0 +1,43 @@
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: DownloadSecureFile@1
+  displayName: securefile
+  inputs:
+    secureFile: settings.xml
+
+- script: |
+   mkdir ~/.m2
+   cp $(Agent.TempDirectory)/settings.xml ~/.m2/settings.xml
+   ls -la ~/.m2
+   
+  displayName: 'Move settings.xml to user home directory'
+
+#Your build pipeline references an undefined variable named ‘Parameters.mavenPOMFile’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. See https://go.microsoft.com/fwlink/?linkid=865972
+
+- task: Maven@3
+  displayName: 'Maven pom.xml'
+  inputs:
+    mavenPomFile: '$(Parameters.mavenPOMFile)'
+    goals: 'package install deploy'
+    codeCoverageToolOption: Cobertura
+
+
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+  inputs:
+    SourceFolder: '$(system.defaultworkingdirectory)'
+    Contents: '**/*.jar'
+    TargetFolder: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
+
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
